@@ -1,140 +1,141 @@
-var fgm = {};
+var fgm = {
+	$: function(id) {
+		return typeof id === "object" ? id : document.getElementById(id)
+	},
 
-fgm.$ = function(id) {
-	return typeof id === "object" ? id : document.getElementById(id)
-};
+	$$: function(tagName, oParent) {
+		return (oParent || document).getElementsByTagName(tagName)
+	},
 
-fgm.$$ = function(tagName, oParent) {
-	return (oParent || document).getElementsByTagName(tagName)
-};
-
-fgm.$$$ = function(className, tagName, oParent) {
-	var reg = new RegExp("(^|\\s)" + className + "(\\s|$)"),
-		aEl = fgm.$$(tagName || "*", oParent)
+	$$$: function(className, tagName, oParent) {
+		var reg = new RegExp("(^|\\s)" + className + "(\\s|$)"),
+			aEl = fgm.$$(tagName || "*", oParent)
 		len = aEl.length,
-		aClass = [],
-		i = 0;
-	for(;i < len; i++) reg.test(aEl[i].className) && aClass.push(aEl[i]);
-	return aClass
-};
+			aClass = [],
+			i = 0;
+		for (; i < len; i++) reg.test(aEl[i].className) && aClass.push(aEl[i]);
+		return aClass
+	},
 
-fgm.index = function(element) {
-	var aChild = element.parentNode.children;
-	for(var i = aChild.length; i--;)
-		if(element == aChild[i]) return i
-};
+	index: function(element) {
+		var aChild = element.parentNode.children;
+		for (var i = aChild.length; i--;)
+			if (element == aChild[i]) return i
+	},
 
-fgm.css = function(element, attr, value) {
-	if(arguments.length == 2) {
-		var style = element.style,
-			currentStyle = element.currentStyle;
-		if(typeof attr === "string")
-			return parseFloat(currentStyle ? currentStyle[attr] : getComputedStyle(element, null)[attr]) || 0
-		for(var property in attr)
-			property == "opacity" ? (style.filter = "alpha(opacity=" + attr[property] + ")", style.opacity = attr[property] / 100) : style[property] = attr[property]		
-	}
-	else if(arguments.length == 3) {
-		switch(attr) {
-			case "width":
-			case "height":
-			case "paddingTop":
-			case "paddingRight":
-			case "paddingBottom":
-			case "paddingLeft":
-				value = Math.max(value, 0);
-			case "top":
-			case "right":
-			case "bottom":
-			case "left":
-			case "marginTop":
-			case "marginRigth":
-			case "marginBottom":
-			case "marginLeft":	
-				element.style[attr] = value + "px";
-				break;
-			case "opacity":
-				element.style.filter = "alpha(opacity=" + value + ")";
-				element.style.opacity = value / 100;
-				break;
-			default:
-				element.style[attr] = value
-		}
-	}
-};
-
-fgm.contains = function(element, oParent) {
-	if(oParent.contains) {
-		return oParent.contains(element)	
-	}
-	else if(oParent.compareDocumentPosition) {
-		return !!(oParent.compareDocumentPosition(element) & 16)
-	}
-};
-
-fgm.isParent = function(element, tagName) {
-	while(element != undefined && element != null && element.tagName.toUpperCase() !== "BODY") {
-		if(element.tagName.toUpperCase() == tagName.toUpperCase())
-			return element;
-		element = element.parentNode;	
-	}
-	return false
-};
-
-fgm.extend = function(destination, source) {
-	for (var property in source) destination[property] = source[property];
-	return destination
-};
-
-fgm.animate = function(obj, json, opt) {
-	clearInterval(obj.timer);
-	obj.iSpeed = 0;
-	opt = fgm.extend({
-		type: "buffer",
-		callback: function() {}
-	}, opt);
-	obj.timer = setInterval(function() {
-		var iCur = 0,
-			complete = !0,
-			property = null,
-			maxSpeed = 30;
-		for(property in json) {
-			iCur = fgm.css(obj, property);
-			property == "opacity" && (iCur = parseInt(iCur.toFixed(2) * 100));
-			switch(opt.type) {
-				case "buffer":
-					obj.iSpeed = (json[property] - iCur) / 5;
-					obj.iSpeed = obj.iSpeed > 0 ? Math.ceil(obj.iSpeed) : Math.floor(obj.iSpeed);
-					json[property] == iCur || (complete = !1, fgm.css(obj, property, property == "zIndex" ? iCur + obj.iSpeed || iCur * -1 : iCur + obj.iSpeed));
+	css: function(element, attr, value) {
+		if (arguments.length == 2) {
+			var style = element.style,
+				currentStyle = element.currentStyle;
+			if (typeof attr === "string")
+				return parseFloat(currentStyle ? currentStyle[attr] : getComputedStyle(element, null)[attr]) || 0
+			for (var property in attr)
+				property == "opacity" ? (style.filter = "alpha(opacity=" + attr[property] + ")", style.opacity = attr[property] / 100) : style[property] = attr[property]
+		} else if (arguments.length == 3) {
+			switch (attr) {
+				case "width":
+				case "height":
+				case "paddingTop":
+				case "paddingRight":
+				case "paddingBottom":
+				case "paddingLeft":
+					value = Math.max(value, 0);
+				case "top":
+				case "right":
+				case "bottom":
+				case "left":
+				case "marginTop":
+				case "marginRigth":
+				case "marginBottom":
+				case "marginLeft":
+					element.style[attr] = value + "px";
 					break;
-				case "flex":
-					obj.iSpeed += (json[property] - iCur) / 5;
-					obj.iSpeed *= 0.7;
-					obj.iSpeed = Math.abs(obj.iSpeed) > maxSpeed ? obj.iSpeed > 0 ? maxSpeed : -maxSpeed : obj.iSpeed;
-					Math.abs(json[property] - iCur) <=1 && Math.abs(obj.iSpeed) <= 1 || (complete = !1, fgm.css(obj, property, iCur + obj.iSpeed));
-					break;	
+				case "opacity":
+					element.style.filter = "alpha(opacity=" + value + ")";
+					element.style.opacity = value / 100;
+					break;
+				default:
+					element.style[attr] = value
 			}
 		}
-		if(complete) {
-			clearInterval(obj.timer);
-			if(opt.type == "flex") for(property in json) fgm.css(obj, property, json[property]);
-			opt.callback.apply(obj, arguments);	
-		}		
-	}, 30)	
+	},
+
+	contains: function(element, oParent) {
+		if (oParent.contains) {
+			return oParent.contains(element)
+		} else if (oParent.compareDocumentPosition) {
+			return !!(oParent.compareDocumentPosition(element) & 16)
+		}
+	},
+
+	isParent: function(element, tagName) {
+		while (element != undefined && element != null && element.tagName.toUpperCase() !== "BODY") {
+			if (element.tagName.toUpperCase() == tagName.toUpperCase())
+				return element;
+			element = element.parentNode;
+		}
+		return false
+	},
+
+	extend: function(destination, source) {
+		for (var property in source) destination[property] = source[property];
+		return destination
+	},
+
+	animate: function(obj, json, opt) {
+		clearInterval(obj.timer);
+		obj.iSpeed = 0;
+		opt = fgm.extend({
+			type: "buffer",
+			callback: function() {}
+		}, opt);
+		obj.timer = setInterval(function() {
+			var iCur = 0,
+				complete = !0,
+				property = null,
+				maxSpeed = 30;
+			for (property in json) {
+				iCur = fgm.css(obj, property);
+				property == "opacity" && (iCur = parseInt(iCur.toFixed(2) * 100));
+				switch (opt.type) {
+					case "buffer":
+						obj.iSpeed = (json[property] - iCur) / 5;
+						obj.iSpeed = obj.iSpeed > 0 ? Math.ceil(obj.iSpeed) : Math.floor(obj.iSpeed);
+						json[property] == iCur || (complete = !1, fgm.css(obj, property, property == "zIndex" ? iCur + obj.iSpeed || iCur * -1 : iCur + obj.iSpeed));
+						break;
+					case "flex":
+						obj.iSpeed += (json[property] - iCur) / 5;
+						obj.iSpeed *= 0.7;
+						obj.iSpeed = Math.abs(obj.iSpeed) > maxSpeed ? obj.iSpeed > 0 ? maxSpeed : -maxSpeed : obj.iSpeed;
+						Math.abs(json[property] - iCur) <= 1 && Math.abs(obj.iSpeed) <= 1 || (complete = !1, fgm.css(obj, property, iCur + obj.iSpeed));
+						break;
+				}
+			}
+			if (complete) {
+				clearInterval(obj.timer);
+				if (opt.type == "flex")
+					for (property in json) fgm.css(obj, property, json[property]);
+				opt.callback.apply(obj, arguments);
+			}
+		}, 30)
+	},
+
+	fireClick: function(element) {
+		if (/(chrome)|(firefox)/i.test(navigator.userAgent)) {
+			var oEvent = document.createEvent("MouseEvents");
+			oEvent.initMouseEvent("click", true, true, document.defaultView, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+			element.dispatchEvent(oEvent)
+		} else if (/safari/i.test(navigator.userAgent)) {
+			var oEvent = document.createEvent("UIEvents");
+			oEvent.initEvent("click", true, true);
+			element.dispatchEvent(oEvent)
+		} else {
+			element.click()
+		}
+	}
+
 };
 
-fgm.fireClick = function(element) {
-	if (/(chrome)|(firefox)/i.test(navigator.userAgent)) {
-		var oEvent = document.createEvent("MouseEvents");
-		oEvent.initMouseEvent("click", true, true, document.defaultView, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-		element.dispatchEvent(oEvent)
-	} else if (/safari/i.test(navigator.userAgent)) {
-		var oEvent = document.createEvent("UIEvents");
-		oEvent.initEvent("click", true, true);
-		element.dispatchEvent(oEvent)
-	} else {
-		element.click()
-	}
-};
 
 //焦点图构造函数
 function Google() {
@@ -288,14 +289,14 @@ function Loading() {
 	this.init.apply(this, arguments)	
 }
 Loading.prototype.init = function(id, aImg, handler) {
-	var oCon 	  = fgm.$(id),
-		oLayer 	  = fgm.$$$("overlay", "div", oCon)[0],
-		oLoad 	  = fgm.$$$("load", "div", oLayer)[0],
-		oSpan 	  = fgm.$$("span", oLoad)[0],
-		oP 		  = fgm.$$("p", oLoad)[0],
-		aData 	  = [],
-		iImgCount = 0,
-		iLoaded	  = 0;
+	var oCon 	  	= fgm.$(id),
+			oLayer 	  = fgm.$$$("overlay", "div", oCon)[0],
+			oLoad 	  = fgm.$$$("load", "div", oLayer)[0],
+			oSpan 	  = fgm.$$("span", oLoad)[0],
+			oP 		  	= fgm.$$("p", oLoad)[0],
+			aData 	  = [],
+			iImgCount = 0,
+			iLoaded	  = 0;
 	if(!oLayer || !oLoad || !oSpan || !oP) {
 		handler();
 		return	
