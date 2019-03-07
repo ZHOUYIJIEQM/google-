@@ -32,7 +32,7 @@ var fgm = {
 			for (var property in attr)
 				property == "opacity" ? (style.filter = "alpha(opacity=" + attr[property] + ")", style.opacity = attr[property] / 100) : style[property] = attr[property]
 		} else if (arguments.length == 3) {
-			switch (attr) {
+			switch (attr) { 
 				case "width":
 				case "height":
 				case "paddingTop":
